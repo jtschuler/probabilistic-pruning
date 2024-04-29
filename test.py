@@ -80,9 +80,20 @@ def test_model_acc(post_prune=False):
     print(f'Accuracy of the model on the 10000 test images ' + ('post' if post_prune else 'pre') + f'-pruning: {100 * correct / total}%')
 
 
-test_model_acc()
-# Apply pruning
-prune_weights(model, threshold=0.8)
-test_model_acc(post_prune=True)
+# test_model_acc()
+# # Apply pruning
+# prune_weights(model, threshold=0.8)
+# test_model_acc(post_prune=True)
 
 
+
+
+import torch
+
+# Specify the size of the tensor, e.g., a 3x3 tensor
+size = (3, 3)
+
+# Create a tensor where each element is 1 with probability 0.5 and 0 otherwise
+tensor = torch.bernoulli(torch.full(size, 0.5))
+
+print(tensor)
