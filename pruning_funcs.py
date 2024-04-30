@@ -3,26 +3,17 @@ from numpy import random
 import torch
 import copy
 
-# def laplace_pdf(x: torch.Tensor, loc=0, scale=1):
-#     y = np.arange(-2, 2, 0.1)
-#     pdf = np.exp(-abs(y-loc)/scale)/(2.*scale)
-#     import matplotlib.pyplot as plt
-#     plt.plot(y, pdf)
-
-#     return torch.exp(-abs(x-loc)/scale)/(2.*scale)
+def laplace_pdf(x: torch.Tensor, loc=0, scale=0.5):
+    return torch.exp(-abs(x-loc)/scale)/(2.*scale)
      
-# def laplace_prune(model, device):
-#     with torch.no_grad():
-#         for name, param in model.named_parameters():
-#             if 'weight' in name:
-#                 laplace_tensor = laplace_pdf(param)
-#                 print(param)
-#                 print(laplace_tensor)
-#                 print(1 - laplace_tensor)
-#                 mask = torch.bernoulli(1 - laplace_tensor).to(device)
-#                 print(mask)
-#                 break
-#                 # param.mul_(mask)
+def laplace_prune(model, device):
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                laplace_tensor = laplace_pdf(param)
+                laplace_tensor = laplace_tensor
+                mask = torch.bernoulli(1 - laplace_tensor).to(device)
+                param.mul_(mask)
 
 
 def bernoulli_prune(model, device, probability=0.99):
@@ -56,7 +47,7 @@ def percent_prune(model, device, percent=1.5, debug=False):
 
                 param.mul_(mask)
 
-def percent_prune_with_bernoulli(model, device, percent=5, debug=False):
+def percent_prune_with_bernoulli(model, device, percent=5, p_success=0.5, debug=False):
     with torch.no_grad():
         for name, param in model.named_parameters():
             if 'weight' in name:
@@ -79,7 +70,7 @@ def percent_prune_with_bernoulli(model, device, percent=5, debug=False):
                 inv_mask = torch.abs(param) < prune_cutoff_val
                 parm_copy.mul_(inv_mask)
 
-                tensor = torch.bernoulli(torch.full(tuple(param.shape), 0.5)).to(device)
+                tensor = torch.bernoulli(torch.full(tuple(param.shape), p_success)).to(device)
                 parm_copy.mul_(tensor)
 
 
