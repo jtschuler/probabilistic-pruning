@@ -56,7 +56,7 @@ def percent_prune(model, device, percent=1.5, debug=False):
 
                 param.mul_(mask)
 
-def percent_prune_with_bernulli(model, device, percent=5, debug=False):
+def percent_prune_with_bernoulli(model, device, percent=5, debug=False):
     with torch.no_grad():
         for name, param in model.named_parameters():
             if 'weight' in name:
@@ -89,3 +89,37 @@ def percent_prune_with_bernulli(model, device, percent=5, debug=False):
 
                 param.mul_(mask)
                 param += parm_copy
+
+
+
+
+def percent_prune_min_max(model, device, percent=1, debug=False):
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                num_elems = 1
+                for val in param.shape:
+                    num_elems = num_elems * val
+                flattened = torch.sort(torch.flatten(torch.abs(param)))
+
+                if debug:
+                    print(torch.abs(param))
+                    print(torch.min(torch.abs(param)))
+                    print(flattened)
+
+                prune_cutoff_idx = int(num_elems*percent/100)
+                prune_cutoff_val_min = flattened[0][prune_cutoff_idx]
+
+
+                prune_cutoff_idx = int(num_elems*(1-percent/100))
+                prune_cutoff_val_max = flattened[0][prune_cutoff_idx]
+
+
+                
+                mask = torch.abs(param) >= prune_cutoff_val_min
+                mask = torch.abs(param) <= prune_cutoff_val_max
+
+                if debug:
+                    print(mask)
+
+                param.mul_(mask)
