@@ -3,18 +3,46 @@ from numpy import random
 import torch
 import copy
 
-def laplace_pdf(x: torch.Tensor, loc=0, scale=0.5):
+# Eval metric
+# From https://discuss.pytorch.org/t/how-to-count-the-number-of-zero-weights-in-a-pytorch-model/13549/2
+def count_zero_weights(model):
+    zeros = 0
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            zeros += param.numel() - param.nonzero().size(0)
+    return zeros
+
+def percent_zero_weights(model):
+    num_zeros = count_zero_weights(model)
+    total_num_weights = sum(p.numel() for name, p in model.named_parameters() if 'weight' in name)
+    return num_zeros / total_num_weights * 100
+
+# Laplace-based pruning methods
+
+def laplace_pdf(x: torch.Tensor, scale, loc=0.):
     return torch.exp(-abs(x-loc)/scale)/(2.*scale)
+
+def normalized_laplace_pdf(x: torch.Tensor, loc=0., scale=0.5):
+    laplace_at = lambda w : np.exp(-abs(w-loc)/scale)/(2.*scale)
+    return (laplace_pdf(x, scale) - laplace_at(1)) / (laplace_at(loc) - laplace_at(1))
      
-def laplace_prune(model, device):
+def laplace_prune(model, device, scale=0.5):
     with torch.no_grad():
         for name, param in model.named_parameters():
             if 'weight' in name:
-                laplace_tensor = laplace_pdf(param)
-                laplace_tensor = laplace_tensor
+                laplace_tensor = laplace_pdf(param, scale=scale)
+                mask = torch.bernoulli(1 - laplace_tensor).to(device)
+                param.mul_(mask)
+     
+def normalized_laplace_prune(model, device, scale=0.5):
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                laplace_tensor = normalized_laplace_pdf(param, scale=scale)
                 mask = torch.bernoulli(1 - laplace_tensor).to(device)
                 param.mul_(mask)
 
+# Percent-based pruning methods
 
 def bernoulli_prune(model, device, probability=0.99):
     with torch.no_grad():
