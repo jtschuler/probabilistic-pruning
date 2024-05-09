@@ -17,6 +17,15 @@ def percent_zero_weights(model):
     total_num_weights = sum(p.numel() for name, p in model.named_parameters() if 'weight' in name)
     return num_zeros / total_num_weights * 100
 
+# Threshold Pruning
+
+def threshold_prune(model, threshold):
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                mask = torch.abs(param) > threshold
+                param.mul_(mask)
+
 # Laplace-based pruning methods
 
 def laplace_pdf(x: torch.Tensor, scale, loc=0.):
@@ -51,8 +60,7 @@ def bernoulli_prune(model, device, probability=0.99):
                 tensor = torch.bernoulli(torch.full(tuple(param.shape), probability)).to(device)
                 param.mul_(tensor)
 
-
-def percent_prune(model, device, percent=1.5, debug=False):
+def percent_prune_by_layer(model, device, percent=1.5):
     with torch.no_grad():
         for name, param in model.named_parameters():
             if 'weight' in name:
@@ -61,18 +69,30 @@ def percent_prune(model, device, percent=1.5, debug=False):
                     num_elems = num_elems * val
                 flattened = torch.sort(torch.flatten(torch.abs(param)))
 
-                if debug:
-                    print(torch.abs(param))
-                    print(torch.min(torch.abs(param)))
-                    print(flattened)
-
                 prune_cutoff_idx = int(num_elems*percent/100)
                 prune_cutoff_val = flattened[0][prune_cutoff_idx]
                 mask = torch.abs(param) >= prune_cutoff_val
 
-                if debug:
-                    print(mask)
+                param.mul_(mask)
 
+
+def bottom_percent_prune(model, device, percent=1.5):
+    with torch.no_grad():
+        all_weights = torch.Tensor().to(device)
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                flattened = torch.flatten(torch.abs(param))
+                all_weights = torch.cat((all_weights, flattened))
+
+        num_elems = all_weights.numel()
+        all_weights = torch.sort(all_weights)
+
+        prune_cutoff_idx = int(num_elems*percent/100)
+        prune_cutoff_val = all_weights[0][prune_cutoff_idx]
+        
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                mask = torch.abs(param) > prune_cutoff_val
                 param.mul_(mask)
 
 def percent_prune_with_bernoulli(model, device, percent=5, p_success=0.5, debug=False):
