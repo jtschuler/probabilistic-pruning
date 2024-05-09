@@ -97,37 +97,31 @@ def bottom_percent_prune(model, device, percent=1.5):
 
 def percent_prune_with_bernoulli(model, device, percent=5, p_success=0.5, debug=False):
     with torch.no_grad():
+        all_weights = torch.Tensor().to(device)
         for name, param in model.named_parameters():
             if 'weight' in name:
-                num_elems = 1
-                for val in param.shape:
-                    num_elems = num_elems * val
-                flattened = torch.sort(torch.flatten(torch.abs(param)))
+                flattened = torch.flatten(torch.abs(param))
+                all_weights = torch.cat((all_weights, flattened))
 
-                if debug:
-                    print(torch.abs(param))
-                    print(torch.min(torch.abs(param)))
-                    print(flattened)
+        num_elems = all_weights.numel()
+        all_weights = torch.sort(all_weights)
 
-                prune_cutoff_idx = int(num_elems*percent/100)
-                prune_cutoff_val = flattened[0][prune_cutoff_idx]
-                mask = torch.abs(param) >= prune_cutoff_val
+        prune_cutoff_idx = int(num_elems*percent/100)
+        prune_cutoff_val = all_weights[0][prune_cutoff_idx]
+        
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                mask = torch.abs(param) > prune_cutoff_val
 
-
-                parm_copy = copy.deepcopy(param)
+                param_copy = copy.deepcopy(param)
                 inv_mask = torch.abs(param) < prune_cutoff_val
-                parm_copy.mul_(inv_mask)
+                param_copy.mul_(inv_mask)
 
                 tensor = torch.bernoulli(torch.full(tuple(param.shape), p_success)).to(device)
-                parm_copy.mul_(tensor)
-
-
-
-                if debug:
-                    print(mask)
+                param_copy.mul_(tensor)
 
                 param.mul_(mask)
-                param += parm_copy
+                param += param_copy
 
 
 
