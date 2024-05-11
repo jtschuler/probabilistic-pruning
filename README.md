@@ -19,7 +19,7 @@ These binary files store the trained model weights for the ResNet and EfficientN
 This script encompasses all the core logic functions necessary for pruning models documented in the notebooks above. 
 
 ### Legacy Files
-`deprecated_working_trained.ipynb`, `state`:
+`deprecated_working_trained.ipynb`, `deprecated_state`:
 
 These files contain earlier iterations of our work and are maintained for historical reference.
 
