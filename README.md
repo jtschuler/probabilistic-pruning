@@ -1,35 +1,35 @@
-# probabilistic-pruning
-Probabilistic Pruning of DNNs
+# Probabilistic Pruning of Neural Networks
 
-## How To Use
-Our three main files containing code are `resnet_optimized.ipynb`, `EfficientNet_optimized.ipynb`, and `pruning_funcs.py`.
+## Overview
+This repository contains the resources for implementing probabilistic pruning on Deep Neural Networks (DNNs). The main notebooks, `resnet_optimized.ipynb` and `EfficientNet_optimized.ipynb`, along with the supporting script `pruning_funcs.py`, are detailed below.
 
-### Main Files
-`resnet_optimized.ipynb`, `EfficientNet_optimized.ipynb`
+### Primary Resources
+`resnet_optimized.ipynb` and `EfficientNet_optimized.ipynb`:
 
-These files are written to train/test the ResNet and EfficientNet models, respectively.
+These notebooks are dedicated to training and testing the ResNet and EfficientNet models. They include comprehensive instructions for model definition, training procedures, and the application of various pruning techniques to assess sparsity and accuracy. These notebooks serve as the primary sources for experimental analysis and contain outputs that are integral to our reports. Due to the probabilistic nature of the experiments, results may vary slightly in each run, reflecting the stochastic nature of the process.
 
-Each file contains cells that define the models, train the models, and test various pruning methods for sparsity and accuracy.
+### State Files
+`resnet_state`, `efficientnet_state`:
 
-These two files are the main place to look for experiments and experimental results. We have stored our output in the notebooks, with the same values and figures that appear in our reports. Note that some of our experiments are inherently non-deterministic, so while some experiments will have *similar* numbers, we do not expect these experiments to give the *exact same* numbers every time.
+These binary files store the trained model weights for the ResNet and EfficientNet models, enabling reproducibility and further experimentation without the need to retrain from scratch.
 
-### Stored State
-`resnet_state`, `efficentnet_state`
+### Utility Script
+`pruning_funcs.py`:
 
-These binary files store the trained weights for the ResNet and EfficientNet models, respectively.
+This script encompasses all the core logic functions necessary for pruning models documented in the notebooks above. 
 
-### Supplementary
-`pruning_funcs.py`
+### Legacy Files
+`deprecated_working_trained.ipynb`, `state`:
 
-This file contains all of our developed methods for pruning the torchvision models in the above files.
+These files contain earlier iterations of our work and are maintained for historical reference.
 
-This file also contains methods for evaluating the number/percentage of pruned weights in a model.
+## Dependencies
+To run the notebooks and scripts provided in this repository, the following packages are required:
+- `torch`
+- `torchvision`
+- `numpy`
+- `matplotlib`
+- `timm`
 
-### Deprecated Files
-`working_trained.ipynb`, `state`
+This setup guide aims to facilitate a structured approach to exploring probabilistic pruning within DNNs, ensuring clarity and consistency in replication and experimentation.
 
-Contains old work.
-
-## Required Packages
-
-`torch`, `torchvision`, `numpy`, `matplotlib`, `timm`
